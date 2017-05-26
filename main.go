@@ -47,11 +47,11 @@ func main() {
 	)
 	flag.Parse()
 
-	nodesStatsURI := *esProtocol "://" + *esUser + ":" + *esPassword + "@" + *esURI + ":" + *esPort + "/_nodes/_local/stats"
+	nodesStatsURI := *esProtocol + "://" + *esUser + ":" + *esPassword + "@" + *esURI + ":" + *esPort + "/_nodes/_local/stats"
 	if *esAllNodes {
-		nodesStatsURI = *esProtocol "://" + *esUser + ":" + *esPassword + "@" + *esURI + ":" + *esPort + "/_nodes/stats"
+		nodesStatsURI = *esProtocol + "://" + *esUser + ":" + *esPassword + "@" + *esURI + ":" + *esPort + "/_nodes/stats"
 	}
-	clusterHealthURI := *esProtocol "://" + *esUser + ":" + *esPassword + "@" + *esURI + ":" + *esPort + "/_cluster/health"
+	clusterHealthURI := *esProtocol + "://" + *esUser + ":" + *esPassword + "@" + *esURI + ":" + *esPort + "/_cluster/health"
 
 	exporter := NewExporter(nodesStatsURI, clusterHealthURI, *esTimeout, *esAllNodes, createElasticSearchTlsConfig(*esCA, *esClientCert, *esClientPrivateKey))
 	prometheus.MustRegister(exporter)
