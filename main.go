@@ -34,9 +34,9 @@ func main() {
 	var (
 		listenAddress      = flag.String("web.listen-address", ":9108", "Address to listen on for web interface and telemetry.")
 		metricsPath        = flag.String("web.telemetry-path", "/metrics", "Path under which to expose metrics.")
-		esHostname         = flag.String("es.hostname", localhost", "hostname of an Elasticsearch node, where client http is enabled.")
-		esProtocol         = flag.String("es.protocol", http", "http/https protocol of an Elasticsearch node")
-		esPort             = flag.String("es.port", 9200", "Port of an Elasticsearch node 9200 or 443")
+		esHostname         = flag.String("es.hostname", "localhost", "hostname of an Elasticsearch node, where client http is enabled.")
+		esProtocol         = flag.String("es.protocol", "http", "http/https protocol of an Elasticsearch node")
+		esPort             = flag.String("es.port", "9200", "Port of an Elasticsearch node 9200 or 443")
 		esUser             = flag.String("es.user", "username", "HTTP username for basic auth of an Elasticsearch node.")
 		esPassword         = flag.String("es.password", "password", "HTTP password for basic auth of an Elasticsearch node.")
 		esTimeout          = flag.Duration("es.timeout", 5*time.Second, "Timeout for trying to get stats from Elasticsearch.")
