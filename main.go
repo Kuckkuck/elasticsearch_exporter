@@ -37,8 +37,8 @@ func main() {
 		esHostname         = flag.String("es.hostname", "localhost", "hostname of an Elasticsearch node, where client http is enabled.")
 		esProtocol         = flag.String("es.protocol", "http", "http/https protocol of an Elasticsearch node")
 		esPort             = flag.String("es.port", "9200", "Port of an Elasticsearch node 9200 or 443")
-		esUser             = flag.String("es.user", "username", "HTTP username for basic auth of an Elasticsearch node.")
-		esPassword         = flag.String("es.password", "password", "HTTP password for basic auth of an Elasticsearch node.")
+		esUser             = flag.String("es.user", "", "HTTP username for basic auth of an Elasticsearch node.")
+		esPassword         = flag.String("es.password", "", "HTTP password for basic auth of an Elasticsearch node.")
 		esTimeout          = flag.Duration("es.timeout", 5*time.Second, "Timeout for trying to get stats from Elasticsearch.")
 		esAllNodes         = flag.Bool("es.all", false, "Export stats for all nodes in the cluster.")
 		esCA               = flag.String("es.ca", "", "Path to PEM file that conains trusted CAs for the Elasticsearch connection.")
@@ -47,11 +47,19 @@ func main() {
 	)
 	flag.Parse()
 
-	nodesStatsURI := *esProtocol + "://" + *esUser + ":" + *esPassword + "@" + *esHostname + ":" + *esPort + "/_nodes/_local/stats"
-	if *esAllNodes {
-		nodesStatsURI = *esProtocol + "://" + *esUser + ":" + *esPassword + "@" + *esHostname + ":" + *esPort + "/_nodes/stats"
+	var authString  string
+
+	if *esUser != "" {
+		authString = *esUser + ":" + *esPassword + "@"
+	} else {
+		authString = nil
 	}
-	clusterHealthURI := *esProtocol + "://" + *esUser + ":" + *esPassword + "@" + *esHostname + ":" + *esPort + "/_cluster/health"
+
+	nodesStatsURI := *esProtocol + "://" + authString + *esHostname + ":" + *esPort + "/_nodes/_local/stats"
+	if *esAllNodes {
+		nodesStatsURI = *esProtocol + "://" + authString + *esHostname + ":" + *esPort + "/_nodes/stats"
+	}
+	clusterHealthURI := *esProtocol + "://" + *esHostname + ":" + *esPort + "/_cluster/health"
 
 	exporter := NewExporter(nodesStatsURI, clusterHealthURI, *esTimeout, *esAllNodes, createElasticSearchTlsConfig(*esCA, *esClientCert, *esClientPrivateKey))
 	prometheus.MustRegister(exporter)
