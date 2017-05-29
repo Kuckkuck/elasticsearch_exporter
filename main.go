@@ -52,7 +52,7 @@ func main() {
 	if *esUser != "" {
 		authString = *esUser + ":" + *esPassword + "@"
 	} else {
-		authString = nil
+		authString = ""
 	}
 
 	nodesStatsURI := *esProtocol + "://" + authString + *esHostname + ":" + *esPort + "/_nodes/_local/stats"
