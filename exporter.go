@@ -361,6 +361,7 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 	defer resp.Body.Close()
 
 	body, err := ioutil.ReadAll(resp.Body)
+	log.Println("output body response:", body)
 	if err != nil {
 		log.Println("Failed to read nodes stats response body:", err)
 		return
