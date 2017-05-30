@@ -49,7 +49,7 @@ func main() {
 
 	var authString  string
 
-	if *esUser != "" {
+	if *esUser != "" && *esPassword != "" {
 		authString = *esUser + ":" + *esPassword + "@"
 	} else {
 		authString = ""
