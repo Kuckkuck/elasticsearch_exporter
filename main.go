@@ -47,7 +47,7 @@ func main() {
 	)
 	flag.Parse()
 
-	var authString  string
+	var authString string
 
 	if *esUser != "" && *esPassword != "" {
 		authString = *esUser + ":" + *esPassword + "@"
