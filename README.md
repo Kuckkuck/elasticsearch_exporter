@@ -50,5 +50,5 @@ we'll attempt to report important values for both.
 ### Original author
 
 This package was originally created and mainted by [Eric Richardson](https://github.com/ewr),
-who transferred this repository to us in Jan 2017.
+who transferred this repository to justwatchcom in Jan 2017.
 Fork was done to add basic authentication, but this is a breaking change for old command line options from the justwatchcom/elasticsearch_exporter repo.
