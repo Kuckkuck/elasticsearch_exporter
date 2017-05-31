@@ -1,6 +1,5 @@
-# Elasticsearch Exporter [![Build Status](https://travis-ci.org/justwatchcom/elasticsearch_exporter.svg?branch=master)](https://travis-ci.org/justwatchcom/elasticsearch_exporter)
+# Elasticsearch Exporter
 
-[![Docker Pulls](https://img.shields.io/docker/pulls/justwatch/elasticsearch_exporter.svg?maxAge=604800)](https://hub.docker.com/r/justwatch/elasticsearch_exporter)
 [![Go Report Card](https://goreportcard.com/badge/github.com/Kuckkuck/elasticsearch_exporter)](https://goreportcard.com/report/github.com/Kuckkuck/elasticsearch_exporter)
 
 Prometheus exporter for various metrics about ElasticSearch, written in Go.
@@ -9,7 +8,7 @@ Basic Authentication was added to support connections via auth proxies or Elasti
 ### Installation
 
 ```bash
-go get -u github.com/justwatchcom/elasticsearch_exporter
+go get -u github.com/Kuckkuck/elasticsearch_exporter
 ```
 
 ### Configuration
@@ -52,3 +51,4 @@ we'll attempt to report important values for both.
 
 This package was originally created and mainted by [Eric Richardson](https://github.com/ewr),
 who transferred this repository to us in Jan 2017.
+Fork was done to add basic authentication, but this is a breaking change for old command line options from the justwatchcom/elasticsearch_exporter repo.
