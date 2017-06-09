@@ -43,6 +43,7 @@ clean: FORCE
 	rm -f -- build/elasticsearch_exporter
 
 build/docker.tar: clean
+	glide install
 	make GO_LDFLAGS="-s -w -linkmode external -extldflags -static" DESTDIR='$(CURDIR)/build/install' install
 	( cd build/install && tar cf - . ) > build/docker.tar
 
