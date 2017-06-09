@@ -1,23 +1,21 @@
-PKG    = github.com/Kuckkuck/elasticsearch_exporter
+#PKG    = github.com/Kuckkuck/elasticsearch_exporter
 PREFIX := /usr
 
 all: build/elasticsearch_exporter
 
-GO            := GOPATH=$(CURDIR)/.gopath GOBIN=$(CURDIR)/build go
+GO            := GOPATH=$(CURDIR) GOBIN=$(CURDIR)/build go
 GO_BUILDFLAGS :=
 GO_LDFLAGS    := -s -w
 
 # This target uses the incremental rebuild capabilities of the Go compiler to speed things up.
 # If no source files have changed, `go install` exits quickly without doing anything.
 build/elasticsearch_exporter: FORCE
-	$(GO) install $(GO_BUILDFLAGS) -ldflags '$(GO_LDFLAGS)' '$(PKG)'
+	$(GO) install $(GO_BUILDFLAGS) -ldflags '$(GO_LDFLAGS)' 
 
 # which packages to test with static checkers?
-GO_ALLPKGS := $(PKG) $(shell go list $(PKG)/pkg/...)
-# which packages to test with `go test`?
-GO_TESTPKGS := $(shell go list -f '{{if .TestGoFiles}}{{.ImportPath}}{{end}}' $(PKG)/pkg/...)
+GO_ALLPKGS := $(PKG) $(shell go list)
 # which packages to measure coverage for?
-GO_COVERPKGS := $(shell go list $(PKG)/pkg/... | grep -v plugins)
+GO_COVERPKGS := $(shell go list | grep -v plugins)
 # output files from `go test`
 GO_COVERFILES := $(patsubst %,build/%.cover.out,$(subst /,_,$(GO_TESTPKGS)))
 
@@ -30,7 +28,6 @@ check: all static-check build/cover.html FORCE
 	@echo -e "\e[1;32m>> All tests successful.\e[0m"
 static-check: FORCE
 	@if s="$$(gofmt -s -l *.go pkg 2>/dev/null)"                            && test -n "$$s"; then printf ' => %s\n%s\n' gofmt  "$$s"; false; fi
-	@if s="$$(golint . && find pkg -type d -exec golint {} \; 2>/dev/null)" && test -n "$$s"; then printf ' => %s\n%s\n' golint "$$s"; false; fi
 	$(GO) vet $(GO_ALLPKGS)
 build/%.cover.out: prepare-check FORCE
 	$(GO) test $(GO_BUILDFLAGS) -ldflags '$(GO_LDFLAGS)' -coverprofile=$@ -covermode=count -coverpkg=$(subst $(space),$(comma),$(GO_COVERPKGS)) $(subst _,/,$*)
