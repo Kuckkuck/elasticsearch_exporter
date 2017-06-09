@@ -1,59 +1,63 @@
-# Copyright 2016 The Prometheus Authors
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-# http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+PKG    = github.com/Kuckkuck/elasticsearch_exporter
+PREFIX := /usr
 
-GO    := GO15VENDOREXPERIMENT=1 go
-PROMU := $(GOPATH)/bin/promu
-pkgs   = $(shell $(GO) list ./... | grep -v /vendor/)
+all: build/elasticsearch_exporter
 
-PREFIX                  ?= $(shell pwd)
-BIN_DIR                 ?= $(shell pwd)
-DOCKER_IMAGE_NAME       ?= elasticsearch-exporter
-DOCKER_IMAGE_TAG        ?= $(subst /,-,$(shell git rev-parse --abbrev-ref HEAD))
+GO            := GOPATH=$(CURDIR)/.gopath GOBIN=$(CURDIR)/build go
+GO_BUILDFLAGS :=
+GO_LDFLAGS    := -s -w
 
+# This target uses the incremental rebuild capabilities of the Go compiler to speed things up.
+# If no source files have changed, `go install` exits quickly without doing anything.
+build/elasticsearch_exporter: FORCE
+	$(GO) install $(GO_BUILDFLAGS) -ldflags '$(GO_LDFLAGS)' '$(PKG)'
 
-all: format build test
+# which packages to test with static checkers?
+GO_ALLPKGS := $(PKG) $(shell go list $(PKG)/pkg/...)
+# which packages to test with `go test`?
+GO_TESTPKGS := $(shell go list -f '{{if .TestGoFiles}}{{.ImportPath}}{{end}}' $(PKG)/pkg/...)
+# which packages to measure coverage for?
+GO_COVERPKGS := $(shell go list $(PKG)/pkg/... | grep -v plugins)
+# output files from `go test`
+GO_COVERFILES := $(patsubst %,build/%.cover.out,$(subst /,_,$(GO_TESTPKGS)))
 
-style:
-	@echo ">> checking code style"
-	@! gofmt -d $(shell find . -path ./vendor -prune -o -name '*.go' -print) | grep '^'
+# down below, I need to substitute spaces with commas; because of the syntax,
+# I have to get these separators from variables
+space := $(null) $(null)
+comma := ,
 
-test:
-	@echo ">> running tests"
-	@$(GO) test -short $(pkgs)
+check: all static-check build/cover.html FORCE
+	@echo -e "\e[1;32m>> All tests successful.\e[0m"
+static-check: FORCE
+	@if s="$$(gofmt -s -l *.go pkg 2>/dev/null)"                            && test -n "$$s"; then printf ' => %s\n%s\n' gofmt  "$$s"; false; fi
+	@if s="$$(golint . && find pkg -type d -exec golint {} \; 2>/dev/null)" && test -n "$$s"; then printf ' => %s\n%s\n' golint "$$s"; false; fi
+	$(GO) vet $(GO_ALLPKGS)
+build/%.cover.out: prepare-check FORCE
+	$(GO) test $(GO_BUILDFLAGS) -ldflags '$(GO_LDFLAGS)' -coverprofile=$@ -covermode=count -coverpkg=$(subst $(space),$(comma),$(GO_COVERPKGS)) $(subst _,/,$*)
+build/cover.out: $(GO_COVERFILES)
+	pkg/test/util/gocovcat.go $(GO_COVERFILES) > $@
+build/cover.html: build/cover.out
+	$(GO) tool cover -html $< -o $@
 
-format:
-	@echo ">> formatting code"
-	@$(GO) fmt $(pkgs)
+install: FORCE all
+	install -D -m 0755 build/elasticsearch_exporter "$(DESTDIR)$(PREFIX)/bin/limes"
 
-vet:
-	@echo ">> vetting code"
-	@$(GO) vet $(pkgs)
+clean: FORCE
+	rm -f -- build/elasticsearch_exporter
 
-build: promu
-	@echo ">> building binaries"
-	@$(PROMU) build --prefix $(PREFIX)
+build/docker.tar: clean
+	make GO_LDFLAGS="-s -w -linkmode external -extldflags -static" DESTDIR='$(CURDIR)/build/install' install
+	( cd build/install && tar cf - . ) > build/docker.tar
 
-tarball: promu
-	@echo ">> building release tarball"
-	@$(PROMU) tarball --prefix $(PREFIX) $(BIN_DIR)
+DOCKER       := docker
+DOCKER_IMAGE := Kuckkuck/elasticsearch_exporter
+DOCKER_TAG   := latest
 
-docker:
-	@echo ">> building docker image"
-	@docker build -t "$(DOCKER_IMAGE_NAME):$(DOCKER_IMAGE_TAG)" .
+docker: build/docker.tar
+	$(DOCKER) build -t "$(DOCKER_IMAGE):$(DOCKER_TAG)" .
 
-promu:
-	@GOOS=$(shell uname -s | tr A-Z a-z) \
-	        GOARCH=$(subst x86_64,amd64,$(patsubst i%86,386,$(shell uname -m))) \
-	        $(GO) get -u github.com/prometheus/promu
+vendor: FORCE
+	@# vendoring by https://github.com/holocm/golangvend
+	golangvend
 
-.PHONY: all style format build test vet tarball docker promu
+.PHONY: FORCE
